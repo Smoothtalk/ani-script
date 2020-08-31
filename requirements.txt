@@ -1,0 +1,16 @@
+# This is an implicit value, here for clarity
+--index-url https://pypi.python.org/simple/
+
+-e git://github.com/arvidn/libtorrent.git@4f5715afe347c445ba2cb78f5fed083bd13c8753#egg=python-libtorrent
+#-e git://github.com/arvidn/libtorrent.git#egg=python-libtorrent
+wheel==0.34.2
+discord.py>=0.16.12
+bs4==0.0.1
+beautifulsoup4==4.6.0
+feedparser==5.2.1
+fuzzywuzzy==0.15.1
+python-Levenshtein==0.12.0
+progressbar
+simplejson==3.8.1
+trakt==2.7.2
+transmissionrpc
