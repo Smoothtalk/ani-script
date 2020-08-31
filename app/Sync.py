@@ -32,5 +32,4 @@ try:
 	process = subprocess.call(command, shell=True)
 except Exception as e:
 	print (e)
-	print ("Failed to sync anime")
-	
+	print ("Failed to sync anime")	
