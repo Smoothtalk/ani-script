@@ -3,12 +3,11 @@
 import sys
 import os
 import json
-import glob
 import subprocess
-
-import transmissionrpc
+import glob
 import xml.etree.ElementTree as ET
-
+import multiprocessing
+import transmissionrpc
 from fuzzywuzzy import fuzz
 from multiprocessing import Process
 from collections import OrderedDict
@@ -117,8 +116,7 @@ def singleFile(torrentTitle):
 		return True
 
 def readJson():
-	json_data=open("../vars.json").read()
-	#json_data=open("vars.json").read()
+	json_data=open("vars.json").read()
 	data = json.loads(json_data, object_pairs_hook=OrderedDict)
 	return data #an OrderedDict
 
@@ -243,29 +241,26 @@ if __name__=='__main__':
 		# print ('arg2: ' + sys.argv[2])
 		# print ('arg3: ' + sys.argv[3])
 		settings = readJson()
-
 		#check for list index out of range
 		isSingleFileDownload = singleFile(sys.argv[1])
-
 		#for automation tools because PATH is hard
 		os.chdir(settings['System Settings']['script_location'])
 
 		#TODO change to check if part of host host_download_dir is in sys.argv[1]
 		if "Downloads/Complete" not in sys.argv[1]:
-			print('Path not correct')
 			sys.exit(1)
 
-		# jobs = []
-		# manager = multiprocessing.Manager()
-		# returnDict = manager.dict()
+		jobs = []
+		manager = multiprocessing.Manager()
+		returnDict = manager.dict()
 
-		# for user in settings['Users']:
-		# 	p = multiprocessing.Process(target=userLoop, args=(settings, isSingleFileDownload, user, returnDict))
-		# 	jobs.append(p)
-		# 	p.start()
+		for user in settings['Users']:
+			p = multiprocessing.Process(target=userLoop, args=(settings, isSingleFileDownload, user, returnDict))
+			jobs.append(p)
+			p.start()
 
-		# for process in jobs:
-		# 	process.join()
+		for process in jobs:
+			process.join()
 
 		#TODO
 		#construct failure dictionary by mapping if sync == false to each key
@@ -276,11 +271,11 @@ if __name__=='__main__':
 		# print failed to sync to: user2, user4
 
 		#temp
-		# if(False in returnDict.values()):
-		# 	print ('Failed to sync to someone')
-		#else:
-			#tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
-			#tc.remove_torrent(sys.argv[2], True)
+		if(False in returnDict.values()):
+			print ('Failed to sync to someone')
+		else:
+			tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
+			tc.remove_torrent(sys.argv[2], True)
 
 	except Exception as e:
 		print (e)
