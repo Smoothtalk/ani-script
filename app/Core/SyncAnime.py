@@ -240,8 +240,10 @@ if __name__=='__main__':
 		# print ('arg2: ' + sys.argv[2])
 		# print ('arg3: ' + sys.argv[3])
 		settings = readJson()
+		
 		#check for list index out of range
 		isSingleFileDownload = singleFile(sys.argv[1])
+
 		#for automation tools because PATH is hard
 		os.chdir(settings['System Settings']['script_location'])
 
