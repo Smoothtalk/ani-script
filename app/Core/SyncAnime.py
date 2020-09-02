@@ -206,7 +206,6 @@ def userLoop(settings, isSingleFileDownload, user, returnDict):
 def sync(syncingUser, serialToSync):
 	if(syncingUser.getRemote_Host() != ''):
 		print ("Syncing: " + serialToSync.getSeriesName() + ' - ' + str(serialToSync.getSeriesEpisode()) + ' to ' + syncingUser.getUserName())
-		#TODO wrap in try except
 
 		if(settings['System Settings']['individual folders'] == "True"):
 			mkdirCommand = "mkdir -p \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
