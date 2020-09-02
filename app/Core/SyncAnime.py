@@ -254,7 +254,7 @@ if __name__=='__main__':
 		if settings['System Settings']['host_download_dir'] not in sys.argv[1]:
 			sys.exit(1)
 
-		
+		#create a job pool, and a manager (shared dict between processes)
 		jobs = []
 		manager = multiprocessing.Manager()
 		returnDict = manager.dict()
