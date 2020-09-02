@@ -246,8 +246,7 @@ if __name__=='__main__':
 		#for automation tools because PATH is hard
 		os.chdir(settings['System Settings']['script_location'])
 
-		#TODO change to check if part of host host_download_dir is in sys.argv[1]
-		if "Downloads/Complete" not in sys.argv[1]:
+		if settings['System Settings']['host_download_dir'] not in sys.argv[1]:
 			sys.exit(1)
 
 		jobs = []
