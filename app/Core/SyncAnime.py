@@ -192,11 +192,15 @@ def userLoop(settings, isSingleFileDownload, user, returnDict):
 		for match in matches:
 			#TODO fix multiple matches
 			print ("Matched: " + match.getSeriesName())
+
 			status = sync(syncingUser, match)
 			returnDict[user] = status
+			
 			os.chdir(settings['System Settings']['script_location'])
+			
 			command = "python3 Tools/DiscordAnnounce.py \'" + serialToSync.getFileNameClean() + '\' ' + syncingUser.getUserName()
 			subprocess.call(command, shell=True)
+			
 			hashtoFile(serialToSync.getTorrentHash())
 
 def sync(syncingUser, serialToSync):
@@ -250,6 +254,7 @@ if __name__=='__main__':
 		if settings['System Settings']['host_download_dir'] not in sys.argv[1]:
 			sys.exit(1)
 
+		
 		jobs = []
 		manager = multiprocessing.Manager()
 		returnDict = manager.dict()
@@ -262,17 +267,11 @@ if __name__=='__main__':
 		for process in jobs:
 			process.join()
 
-		#TODO
-		#construct failure dictionary by mapping if sync == false to each key
-		#each key has a dictionary of values with hte only value being successfully
-		#{user1: {sync: true}, user2: {sync: false}, user3: {sync: true}, user4: {sync: false}}
-		#-> {user2: false, user4: false}
-		#if fail dict.length > 1
-		# print failed to sync to: user2, user4
-
-		#temp
+		#checks if the status of the sync was sucessful, otherwise prints failed syncs
 		if(False in returnDict.values()):
-			print ('Failed to sync to someone')
+			for value in returnDict.keys():
+				if(returnDict[value] == False):
+					print ('Failed to sync to ' + value)
 		# else:
 			# tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
 			# tc.remove_torrent(sys.argv[2], True)
