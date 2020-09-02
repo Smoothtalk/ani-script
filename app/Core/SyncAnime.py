@@ -246,6 +246,7 @@ if __name__=='__main__':
 		#for automation tools because PATH is hard
 		os.chdir(settings['System Settings']['script_location'])
 
+		#check if the download exists in the correct directory
 		if settings['System Settings']['host_download_dir'] not in sys.argv[1]:
 			sys.exit(1)
 
