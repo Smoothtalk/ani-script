@@ -269,9 +269,9 @@ if __name__=='__main__':
 
 		#checks if the status of the sync was sucessful, otherwise prints failed syncs
 		if(False in returnDict.values()):
-			for value in returnDict.keys():
+			for user in returnDict.keys():
 				if(returnDict[value] == False):
-					print ('Failed to sync to ' + value)
+					print ('Failed to sync to ' + user)
 		# else:
 			# tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
 			# tc.remove_torrent(sys.argv[2], True)
