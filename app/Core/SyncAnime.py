@@ -233,14 +233,13 @@ def hashtoFile(theHash):
 	completed.write('\n')
 	completed.close()
 
-#TODO sys.argv[1] is the same as setFilePath(...) deal with it or refactor it out
 if __name__=='__main__':
 	try:
 		# print ('arg1: ' + sys.argv[1])
 		# print ('arg2: ' + sys.argv[2])
 		# print ('arg3: ' + sys.argv[3])
 		settings = readJson()
-		
+
 		#check for list index out of range
 		isSingleFileDownload = singleFile(sys.argv[1])
 
