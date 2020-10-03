@@ -203,26 +203,28 @@ def makeMagnets(matches, transmissionClient):
 	nextWeek = currDate + datetime.timedelta(days=7)
 
 	for matchedShow in matches:
-		# print (matchedShow.title)
+		print (matchedShow.title)
 		title = matchedShow.title.replace("'", "\'")
 		url = matchedShow.link
-
+		gid = matchedShow.id
+		
 		pubDate = matchedShow.published[:-6]
 		datetime_publish = datetime.datetime.strptime(pubDate, '%a, %d %b %Y %H:%M:%S')
 
 		if(lastWeek <= datetime_publish <= nextWeek):
-			if ".torrent" in url: #Nyaa RSS
-					tid = str(url[25:32])
+			if ".torrent" in url: #Erai RSS
+					tid = str(gid[46:])
 					fileWithQuotes = '"' + tid + ".torrent" + '"'
 			else: #HS RSS
 				tid = str(url[20:52])
 				fileWithQuotes = '"' + title + ".torrent" + '"'
+		print(tid)
+		# if tid not in existingTIDs: #if tid doesn't already exist, download
+		# 	incomingTorrent = transmissionClient.add_torrent(url)
+		# 	tidfile = open('../Data/tidfile', 'a+') #stores torrent tids so that they wont download again
+		# 	tidfile.write(tid+"\n")
+		# 	pollTorrent(transmissionClient, incomingTorrent.hashString)
 
-		if tid not in existingTIDs: #if tid doesn't already exist, download
-			incomingTorrent = transmissionClient.add_torrent(url)
-			tidfile = open('../Data/tidfile', 'a+') #stores torrent tids so that they wont download again
-			tidfile.write(tid+"\n")
-			pollTorrent(transmissionClient, incomingTorrent.hashString)
 	tidfile.close()
 
 def pollTorrent(transmissionClient, torrentID):
@@ -266,7 +268,7 @@ for url in feedUrls:
 	    ssl._create_default_https_context = ssl._create_unverified_context
 	if(url != ""):
 		feed = feedparser.parse(url)
-		print(feed.status)
+		print("Status of RSS Feed: " + str(feed.status))
 		releases = feed.get('entries')
 		matches = getMatches(releases, allShows, matches)
 

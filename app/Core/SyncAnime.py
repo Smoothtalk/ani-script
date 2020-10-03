@@ -116,7 +116,7 @@ def singleFile(torrentTitle):
 		return True
 
 def readJson():
-	json_data=open("../vars.json").read()
+	json_data=open("vars.json").read()
 	data = json.loads(json_data, object_pairs_hook=OrderedDict)
 	return data #an OrderedDict
 
@@ -192,41 +192,39 @@ def userLoop(settings, isSingleFileDownload, user, returnDict):
 		for match in matches:
 			#TODO fix multiple matches
 			print ("Matched: " + match.getSeriesName())
-
 			status = sync(syncingUser, match)
 			returnDict[user] = status
-			
-			os.chdir(settings['System Settings']['script_location'])
-			
-			command = "python3 Tools/DiscordAnnounce.py \'" + serialToSync.getFileNameClean() + '\' ' + syncingUser.getUserName()
-			subprocess.call(command, shell=True)
-			
-			hashtoFile(serialToSync.getTorrentHash())
 
 def sync(syncingUser, serialToSync):
 	if(syncingUser.getRemote_Host() != ''):
 		print ("Syncing: " + serialToSync.getSeriesName() + ' - ' + str(serialToSync.getSeriesEpisode()) + ' to ' + syncingUser.getUserName())
-
+		#TODO wrap in try except
 		if(settings['System Settings']['individual folders'] == "True"):
-			mkdirCommand = "mkdir -p \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
-			subprocess.check_call(mkdirCommand, shell=True)
-
-			moveToCommand = "cp \'" + serialToSync.getFilePath() + "\' \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
-			renameFileCommand = "mv '" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameRaw() + "' '" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameClean() + '\''
-			changeOwnerCommand = "chown 1000:1000 \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameClean() + '\''
-			changeModCommand = "chmod 0770 \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameClean() + '\''
-		
+			#.replace(" ", "\ ") after get seriesName
+			command = "mkdir -p \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "cp \'" + serialToSync.getFilePath() + "\' \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "mv '" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameRaw() + "' '" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameClean() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "chown 1000:1000 \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameClean() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "chmod 0770 \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '/' + serialToSync.getFileNameClean() + '\''
+			process = subprocess.check_call(command, shell=True)
 		elif(settings['System Settings']['individual folders'] == "False"):
-			moveToCommand = "cp \'" + serialToSync.getFilePath() + "\' \'" + syncingUser.getRemote_Download_Dir() + '\''
-			renameFileCommand = "mv '" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameRaw() + "' '" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameClean() + '\''
-			changeOwnerCommand = "chown 1000:1000 \'" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameClean() + '\''
-			changeModCommand = "chmod 0770 \'" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameClean() + '\''
-
-		subprocess.check_call(moveToCommand, shell=True)
-		subprocess.check_call(renameFileCommand, shell=True)
-		subprocess.check_call(changeOwnerCommand, shell=True)
-		subprocess.check_call(changeModCommand, shell=True)
-
+			command = "cp \'" + serialToSync.getFilePath() + "\' \'" + syncingUser.getRemote_Download_Dir() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "mv '" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameRaw() + "' '" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameClean() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "chown 1000:1000 \'" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameClean() + '\''
+			process = subprocess.check_call(command, shell=True)
+			command = "chmod 0770 \'" + syncingUser.getRemote_Download_Dir() + '/' + serialToSync.getFileNameClean() + '\''
+			process = subprocess.check_call(command, shell=True)
+		os.chdir(settings['System Settings']['script_location'])
+		command = "python3 Tools/DiscordAnnounce.py \'" + serialToSync.getFileNameClean() + '\' ' + syncingUser.getUserName()
+		# print (command)
+		process = subprocess.call(command, shell=True)
+		hashtoFile(serialToSync.getTorrentHash())
 		return True
 
 def hashtoFile(theHash):
@@ -236,24 +234,22 @@ def hashtoFile(theHash):
 	completed.write('\n')
 	completed.close()
 
+#TODO sys.argv[1] is the same as setFilePath(...) deal with it or refactor it out
 if __name__=='__main__':
 	try:
 		# print ('arg1: ' + sys.argv[1])
 		# print ('arg2: ' + sys.argv[2])
 		# print ('arg3: ' + sys.argv[3])
 		settings = readJson()
-
 		#check for list index out of range
 		isSingleFileDownload = singleFile(sys.argv[1])
-
 		#for automation tools because PATH is hard
 		os.chdir(settings['System Settings']['script_location'])
 
-		#check if the download exists in the correct directory
-		if settings['System Settings']['host_download_dir'] not in sys.argv[1]:
+		#TODO change to check if part of host host_download_dir is in sys.argv[1]
+		if "Downloads/Complete" not in sys.argv[1]:
 			sys.exit(1)
 
-		#create a job pool, and a manager (shared dict between processes)
 		jobs = []
 		manager = multiprocessing.Manager()
 		returnDict = manager.dict()
@@ -266,14 +262,20 @@ if __name__=='__main__':
 		for process in jobs:
 			process.join()
 
-		#checks if the status of the sync was sucessful, otherwise prints failed syncs
+		#TODO
+		#construct failure dictionary by mapping if sync == false to each key
+		#each key has a dictionary of values with hte only value being successfully
+		#{user1: {sync: true}, user2: {sync: false}, user3: {sync: true}, user4: {sync: false}}
+		#-> {user2: false, user4: false}
+		#if fail dict.length > 1
+		# print failed to sync to: user2, user4
+
+		#temp
 		if(False in returnDict.values()):
-			for user in returnDict.keys():
-				if(returnDict[user] == False):
-					print ('Failed to sync to ' + user)
-		# else:
-			# tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
-			# tc.remove_torrent(sys.argv[2], True)
+			print ('Failed to sync to someone')
+		else:
+			tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
+			tc.remove_torrent(sys.argv[2], True)
 
 	except Exception as e:
 		print (e)
