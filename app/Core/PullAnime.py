@@ -1,26 +1,30 @@
 #!/ani-script/venv/bin/python3
 
-import sys
+
 import os
+import sys
+import ssl
 import json
+import glob
+import base64
+import urllib
+import requests
 import datetime
 import feedparser
-import urllib
 import progressbar
 import transmissionrpc
-import ssl
 import xml.etree.ElementTree as ET
 
-from collections import OrderedDict
 from fuzzywuzzy import fuzz
+from collections import OrderedDict
 
 bar = progressbar.ProgressBar(maxval=1, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 # feedparser.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
 feedparser.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
 
-
-FUZZ_RATIO = 85
+FUZZ_RATIO = 80
 TRANSMISSION_PORT = 9091
+PATH_TO_TORRENT_FILES = '..//Data//torrents//'
 
 #anime object to store relevant deets
 class userClass():
@@ -206,25 +210,34 @@ def makeMagnets(matches, transmissionClient):
 		print (matchedShow.title)
 		title = matchedShow.title.replace("'", "\'")
 		url = matchedShow.link
-		gid = matchedShow.id
-		
+
 		pubDate = matchedShow.published[:-6]
 		datetime_publish = datetime.datetime.strptime(pubDate, '%a, %d %b %Y %H:%M:%S')
 
 		if(lastWeek <= datetime_publish <= nextWeek):
-			if ".torrent" in url: #Erai RSS
-					tid = str(gid[46:])
+			if "erai" in url: #Erai RSS
+					gid = matchedShow.id
+					tid = str(gid[45:])
 					fileWithQuotes = '"' + tid + ".torrent" + '"'
+					r = requests.get(url, allow_redirects=True)
+					open(PATH_TO_TORRENT_FILES + tid + '.torrent', 'wb').write(r.content)
+			elif "nyaa" in url:
+				tid = str(url[27:32])
+				print(tid)
 			else: #HS RSS
 				tid = str(url[20:52])
 				fileWithQuotes = '"' + title + ".torrent" + '"'
-		print(tid)
-		# if tid not in existingTIDs: #if tid doesn't already exist, download
-		# 	incomingTorrent = transmissionClient.add_torrent(url)
-		# 	tidfile = open('../Data/tidfile', 'a+') #stores torrent tids so that they wont download again
-		# 	tidfile.write(tid+"\n")
-		# 	pollTorrent(transmissionClient, incomingTorrent.hashString)
 
+		if tid not in existingTIDs: #if tid doesn't already exist, download
+			with open(PATH_TO_TORRENT_FILES + tid + '.torrent', "rb") as torrentFile:
+				incomingTorrent = transmissionClient.add_torrent(base64.b64encode(torrentFile.read()).decode())
+			tidfile = open('../Data/tidfile', 'a+') #stores torrent 3tids so that they wont download again
+			tidfile.write(tid+"\n")
+			pollTorrent(transmissionClient, incomingTorrent.hashString)
+
+	files = glob.glob(PATH_TO_TORRENT_FILES + '*')
+	for f in files:
+		os.remove(f)
 	tidfile.close()
 
 def pollTorrent(transmissionClient, torrentID):
