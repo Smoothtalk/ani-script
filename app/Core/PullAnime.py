@@ -86,7 +86,7 @@ def readJson():
 
 def getSeriesTitle(fileName):
 	tempName = fileName.replace("_", " ")
-	firstHyphen = tempName.rfind(' - ')
+	firstHyphen = tempName.rfind(' – ')
 	firstCBrac = tempName.index(']', 0)
 	seriesName = tempName[firstCBrac+2:firstHyphen]
 	return seriesName
