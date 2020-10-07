@@ -12,7 +12,7 @@ from fuzzywuzzy import fuzz
 from multiprocessing import Process
 from collections import OrderedDict
 
-FUZZ_RATIO = 85
+FUZZ_RATIO = 80
 TRANSMISSION_PORT = 9091
 validFileExtensions = ['.avi', '.mkv', '.mp4']
 
@@ -62,7 +62,7 @@ class Series:
 	def setSeriesTitle(self, fileName):
 		#TODO fix j'darc
 		tempName = fileName.replace("_", " ")
-
+		tempName = tempName.replace(u" – ", " - ")
 		firstHyphen = tempName.rfind(' - ')
 		firstCBrac = tempName.index(']', 0)
 		seriesName = tempName[firstCBrac+2:firstHyphen]
