@@ -87,7 +87,7 @@ def readJson():
 def getSeriesTitle(fileName):
 	tempName = fileName.replace("_", " ")
 	tempName = tempName.replace(u" – ", " - ")
-	firstHyphen = tempName.rfind(' – ')
+	firstHyphen = tempName.rfind(' - ')
 	firstCBrac = tempName.index(']', 0)
 	seriesName = tempName[firstCBrac+2:firstHyphen]
 	return seriesName
@@ -202,17 +202,20 @@ def makeMagnets(matches, transmissionClient):
 	tidfile = open('../Data/tidfile', 'r+') #stores torrent tids so that they wont download again
 	existingTIDs = tidfile.read().split("\n")
 	tidfile.close()
+	isTorrentFile = False
 
 	currDate = datetime.datetime.strptime(datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S") #getting today with out stupid microseconds
 	lastWeek = currDate - datetime.timedelta(days=7)
 	nextWeek = currDate + datetime.timedelta(days=7)
 
 	for matchedShow in matches:
-		print (matchedShow.title)
-		title = matchedShow.title.replace("'", "\'")
+		title = getSeriesTitle(matchedShow.title)
+		title = title.replace("'", "\'")
+		# print(title)
+
 		url = matchedShow.link
 
-		pubDate = matchedShow.published[:-6]
+		pubDate = matchedShow.published[:-4]
 		datetime_publish = datetime.datetime.strptime(pubDate, '%a, %d %b %Y %H:%M:%S')
 
 		if(lastWeek <= datetime_publish <= nextWeek):
@@ -222,16 +225,25 @@ def makeMagnets(matches, transmissionClient):
 					fileWithQuotes = '"' + tid + ".torrent" + '"'
 					r = requests.get(url, allow_redirects=True)
 					open(PATH_TO_TORRENT_FILES + tid + '.torrent', 'wb').write(r.content)
-			elif "nyaa" in url:
+					isTorrentFile = True
+			elif "nyaa.si" in url:
 				tid = str(url[27:32])
 				print(tid)
-			else: #HS RSS
+			elif "horrible" in url: #HS RSS
 				tid = str(url[20:52])
 				fileWithQuotes = '"' + title + ".torrent" + '"'
+				isTorrentFile = True
+			elif "Tokyo Tosho" in matchedShow.description:
+				tid = matchedShow.description[matchedShow.description.find('?id=') + 5:matchedShow.description.find('?id=') + 11]
+			else: 
+				print("Something went wrong")
 
 		if tid not in existingTIDs: #if tid doesn't already exist, download
-			with open(PATH_TO_TORRENT_FILES + tid + '.torrent', "rb") as torrentFile:
-				incomingTorrent = transmissionClient.add_torrent(base64.b64encode(torrentFile.read()).decode())
+			if(isTorrentFile):
+				with open(PATH_TO_TORRENT_FILES + tid + '.torrent', "rb") as torrentFile:
+					incomingTorrent = transmissionClient.add_torrent(base64.b64encode(torrentFile.read()).decode())
+			else:
+				incomingTorrent = transmissionClient.add_torrent(url)
 			tidfile = open('../Data/tidfile', 'a+') #stores torrent 3tids so that they wont download again
 			tidfile.write(tid+"\n")
 			pollTorrent(transmissionClient, incomingTorrent.hashString)
