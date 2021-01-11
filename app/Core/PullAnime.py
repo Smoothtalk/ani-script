@@ -88,9 +88,14 @@ def getSeriesTitle(fileName):
 	tempName = fileName.replace("_", " ")
 	tempName = tempName.replace(u" – ", " - ")
 	firstHyphen = tempName.rfind(' - ')
-	firstCBrac = tempName.index(']', 0)
-	seriesName = tempName[firstCBrac+2:firstHyphen]
+	prefixCBrac = tempName.index(']', 7)
+	seriesName = tempName[prefixCBrac+2:firstHyphen]
 	return seriesName
+
+def getCRC(releaseTitle):
+	lastRightBrac = releaseTitle.rfind(']')
+	lastLeftBrac = releaseTitle.rfind('[')
+	return releaseTitle[lastLeftBrac+1:lastRightBrac]
 
 def pullAniListUserData(userList):
 	for user in userList:
@@ -175,8 +180,8 @@ def getAllUniqueAniListShows(users):
 			if(checkDupes(tempAnime.getTitle(), allShows)):
 				allShows.append(tempAnime)
 
-#	for animeShows in allShows:
-#		print (animeShows.getTitle())
+	# for animeShows in allShows:
+	# 	print (animeShows.getTitle())
 
 	print ("Length of all shows(dupes included): " + str(len(allShows)))
 	allShows = list(set(allShows)) #Removes dupes from list
@@ -215,36 +220,29 @@ def makeMagnets(matches, transmissionClient):
 
 		url = matchedShow.link
 
-		pubDate = matchedShow.published[:-4]
+		pubDate = matchedShow.published[:-6]
 		datetime_publish = datetime.datetime.strptime(pubDate, '%a, %d %b %Y %H:%M:%S')
 
 		if(lastWeek <= datetime_publish <= nextWeek):
-			if "erai" in url: #Erai RSS
-					gid = matchedShow.id
-					tid = str(gid[45:])
-					fileWithQuotes = '"' + tid + ".torrent" + '"'
-					r = requests.get(url, allow_redirects=True)
-					open(PATH_TO_TORRENT_FILES + tid + '.torrent', 'wb').write(r.content)
-					isTorrentFile = True
-			elif "nyaa.si" in url:
-				tid = str(url[27:32])
-				print(tid)
-			elif "horrible" in url: #HS RSS
-				tid = str(url[20:52])
-				fileWithQuotes = '"' + title + ".torrent" + '"'
-				isTorrentFile = True
-			elif "Tokyo Tosho" in matchedShow.description:
-				tid = matchedShow.description[matchedShow.description.find('?id=') + 5:matchedShow.description.find('?id=') + 11]
-			else: 
+			if ("subsplease_size" in matchedShow.keys()):
+				tid = getCRC(matchedShow.title)
+				url = matchedShow.link
+			elif("Submitter: subsplease" in matchedShow.summary): #subsplease TT RSS
+				tid = matchedShow.link[21:28]
+				startMagnetIndex = matchedShow.summary.index('magnet:')
+				endMagnetIndex  = matchedShow.summary.rfind('>Magnet ')
+				url = matchedShow.summary[startMagnetIndex:endMagnetIndex - 1]
+			else:
 				print("Something went wrong")
 
-		if tid not in existingTIDs: #if tid doesn't already exist, download
+		if tid not in existingTIDs: #if tid doesn't already exist
 			if(isTorrentFile):
 				with open(PATH_TO_TORRENT_FILES + tid + '.torrent', "rb") as torrentFile:
 					incomingTorrent = transmissionClient.add_torrent(base64.b64encode(torrentFile.read()).decode())
 			else:
 				incomingTorrent = transmissionClient.add_torrent(url)
-			tidfile = open('../Data/tidfile', 'a+') #stores torrent 3tids so that they wont download again
+
+			tidfile = open('../Data/tidfile', 'a+') #stores torrent tids so that they wont download again
 			tidfile.write(tid+"\n")
 			pollTorrent(transmissionClient, incomingTorrent.hashString)
 
@@ -268,6 +266,7 @@ def pollTorrent(transmissionClient, torrentID):
 		command = "python3 ../Sync.py \'" +  fullPath.replace("'", "\'\\'\'") + '\' \'' + torrentID + '\' \'' + torrent.name.replace("'", "\'\\'\'") + '\''
 	else:
 		command = "python3 ../Sync.py \'" +  fullPath + '\' \'' + torrentID + '\' \'' + torrent.name + '\''
+	# print(command)
 	os.system(command)
 
 def getFeeds(Rss_Feeds):
