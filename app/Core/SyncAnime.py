@@ -12,7 +12,7 @@ from fuzzywuzzy import fuzz
 from multiprocessing import Process
 from collections import OrderedDict
 
-FUZZ_RATIO = 80
+FUZZ_RATIO = 75
 TRANSMISSION_PORT = 9091
 validFileExtensions = ['.avi', '.mkv', '.mp4']
 
@@ -27,7 +27,10 @@ class Series:
 	def setSeriesName(self, seriesName):
 		self.seriesName = seriesName
 	def setSeriesEpisode(self, episodeNumber):
-		self.episode = int(episodeNumber)
+		if("." in episodeNumber):
+			self.episode = float(episodeNumber)
+		else:
+			self.episode = int(episodeNumber)
 	def setFileNameRaw(self, fileName):
 		self.fileNameRaw = fileName
 	def setFileNameClean(self, fileName):
@@ -153,7 +156,7 @@ def getMatches(AniListShows, listOfValidFiles):
 
 	for validFile in listOfValidFiles:
 		for show in AniListShows.keys():
-			if (fuzz.ratio(show, validFile.getSeriesName()) > FUZZ_RATIO) and validFile not in matches:
+			if (fuzz.ratio(show.lower(), validFile.getSeriesName().lower()) > FUZZ_RATIO) and validFile not in matches:
 				if validFile.getSeriesEpisode() > AniListShows[show]['episodesWatched']:
 					matches.append(validFile)
 				elif (validFile.getSeriesEpisode() == 0) and (AniListShows[show]['episodesWatched'] == 0):
@@ -201,6 +204,11 @@ def sync(syncingUser, serialToSync):
 		#TODO wrap in try except
 		if(settings['System Settings']['individual folders'] == "True"):
 			#.replace(" ", "\ ") after get seriesName
+			#deal with series names ending with .
+
+			if(serialToSync.getSeriesName().endswith(".")):
+				serialToSync.setSeriesName(serialToSync.getSeriesName()[:-1]) 
+			
 			command = "mkdir -p \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
 			process = subprocess.check_call(command, shell=True)
 			command = "cp \'" + serialToSync.getFilePath() + "\' \'" + syncingUser.getRemote_Download_Dir() + serialToSync.getSeriesName() + '\''
@@ -275,7 +283,7 @@ if __name__=='__main__':
 			print ('Failed to sync to someone')
 		else:
 			tc = transmissionrpc.Client('localhost', port=TRANSMISSION_PORT)
-			tc.remove_torrent(sys.argv[2], True)
+			#tc.remove_torrent(sys.argv[2], True)
 
 	except Exception as e:
 		print (e)

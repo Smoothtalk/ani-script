@@ -22,7 +22,7 @@ bar = progressbar.ProgressBar(maxval=1, widgets=[progressbar.Bar('=', '[', ']'),
 # feedparser.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
 feedparser.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
 
-FUZZ_RATIO = 80
+FUZZ_RATIO = 75
 TRANSMISSION_PORT = 9091
 PATH_TO_TORRENT_FILES = '..//Data//torrents//'
 
@@ -181,7 +181,7 @@ def getAllUniqueAniListShows(users):
 				allShows.append(tempAnime)
 
 	# for animeShows in allShows:
-	# 	print (animeShows.getTitle())
+		# print (animeShows.getTitle())
 
 	print ("Length of all shows(dupes included): " + str(len(allShows)))
 	allShows = list(set(allShows)) #Removes dupes from list
@@ -193,7 +193,7 @@ def getMatches(releases, allShows, matches):
 	for release in releases:
 		seriesTitle = getSeriesTitle(release.title)
 		for show in allShows:
-			if(fuzz.ratio(show.getTitle(), seriesTitle) > FUZZ_RATIO):
+			if(fuzz.ratio(show.getTitle().lower(), seriesTitle.lower()) > FUZZ_RATIO):
 				if (len(show.getTitle()) != 1): #DARN 'K' ANIME MESSING EVERYTHING UP, since the title splitter on line 130 picks up only 'k' as the title
 					matches.append(release) #it matches any anime title with 'k' in it
 			elif(len(show.getAlt_titles()) > 0):
@@ -216,7 +216,7 @@ def makeMagnets(matches, transmissionClient):
 	for matchedShow in matches:
 		title = getSeriesTitle(matchedShow.title)
 		title = title.replace("'", "\'")
-		# print(title)
+		print(title)
 
 		url = matchedShow.link
 
